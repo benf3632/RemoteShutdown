@@ -1,0 +1,19 @@
+﻿<Window x:Class="shutdownRemoteServer.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:shutdownRemoteServer"
+        mc:Ignorable="d"
+        Title="Shutdown Remote Server" Height="220.461" Width="479.683" ResizeMode="NoResize" WindowStartupLocation="CenterScreen">
+    <Grid>
+        <TextBlock Name="TBCountDown" Width="450" TextAlignment="Center" FontSize="70" Text="" FontFamily="Segoe UI Light" Margin="11,7,11,52"/>
+        <RadioButton Name="Shut" Content="Shutdown" HorizontalAlignment="Left" Margin="10,159,0,0" VerticalAlignment="Top" Width="82" Checked="RadioButton_Checked" IsChecked="True"/>
+        <RadioButton Name="Res" Content="Restart" HorizontalAlignment="Left" Margin="137,159,0,0" VerticalAlignment="Top" Checked="RadioButton_Checked"/>
+        <RadioButton Name="Hib" Content="Hibrnate" HorizontalAlignment="Left" Margin="244,159,0,0" VerticalAlignment="Top" Checked="RadioButton_Checked"/>
+        <Button Click="Start_Click" Name="start" Content="Start!" HorizontalAlignment="Left" Margin="372,156,0,0" VerticalAlignment="Top" Width="75"/>
+        <TextBox Name="H" HorizontalAlignment="Left" Height="23" Margin="10,131,0,0" TextWrapping="Wrap" Text="Hours" VerticalAlignment="Top" Width="82"/>
+        <TextBox Name="M" HorizontalAlignment="Left" Height="23" Margin="115,131,0,0" TextWrapping="Wrap" Text="Minutes" VerticalAlignment="Top" Width="78"/>
+        <TextBox Name="S" HorizontalAlignment="Left" Height="23" Margin="214,131,0,0" TextWrapping="Wrap" Text="Seconds" VerticalAlignment="Top" Width="77" RenderTransformOrigin="0.254,0.299"/>
+    </Grid>
+</Window>
