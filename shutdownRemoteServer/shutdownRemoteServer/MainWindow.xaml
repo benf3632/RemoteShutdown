@@ -5,15 +5,24 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:shutdownRemoteServer"
         mc:Ignorable="d"
-        Title="Shutdown Remote Server" Height="220.461" Width="479.683" ResizeMode="NoResize" WindowStartupLocation="CenterScreen" Icon="shutdown.ico">
-    <Grid>
-        <TextBlock Name="TBCountDown" Width="450" TextAlignment="Center" FontSize="70" Text="" FontFamily="Segoe UI Light" Margin="11,7,11,52"/>
-        <RadioButton Name="Shut" Content="Shutdown" HorizontalAlignment="Left" Margin="10,159,0,0" VerticalAlignment="Top" Width="82" Checked="RadioButton_Checked" IsChecked="True"/>
-        <RadioButton Name="Res" Content="Restart" HorizontalAlignment="Left" Margin="137,159,0,0" VerticalAlignment="Top" Checked="RadioButton_Checked"/>
-        <RadioButton Name="Hib" Content="Hibrnate" HorizontalAlignment="Left" Margin="244,159,0,0" VerticalAlignment="Top" Checked="RadioButton_Checked"/>
-        <Button Name="start" Content="Start!" HorizontalAlignment="Left" Margin="372,156,0,0" VerticalAlignment="Top" Width="75"/>
-        <TextBox DataObject.Pasting="Pasting" PreviewTextInput="PreviewTextInput" Name="H" HorizontalAlignment="Left" Height="23" Margin="10,131,0,0" TextWrapping="Wrap" Text="Hours" VerticalAlignment="Top" Width="82"/>
-        <TextBox DataObject.Pasting="Pasting" PreviewTextInput="PreviewTextInput" Name="M" HorizontalAlignment="Left" Height="23" Margin="115,131,0,0" TextWrapping="Wrap" Text="Minutes" VerticalAlignment="Top" Width="78"/>
-        <TextBox DataObject.Pasting="Pasting" PreviewTextInput="PreviewTextInput" Name="S" HorizontalAlignment="Left" Height="23" Margin="214,131,0,0" TextWrapping="Wrap" Text="Seconds" VerticalAlignment="Top" Width="77" RenderTransformOrigin="0.254,0.299"/>
+        Title="Shutdown Remote Server" Height="220.461" Width="397.09" ResizeMode="NoResize" WindowStartupLocation="CenterScreen" Icon="shutdown.ico">
+    <Grid Margin="0,0,4,0">
+        <TextBlock Name="TBCountDown" TextAlignment="Center" FontSize="70" Text="00:00:00" FontFamily="Segoe UI Light" Margin="50,5,58,91" RenderTransformOrigin="0.5,0.5">
+            <TextBlock.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform/>
+                    <SkewTransform AngleX="0.815"/>
+                    <RotateTransform/>
+                    <TranslateTransform X="0.939"/>
+                </TransformGroup>
+            </TextBlock.RenderTransform>
+        </TextBlock>
+        <RadioButton Name="Shut" Content="Shutdown" HorizontalAlignment="Left" Margin="21,157,0,0" VerticalAlignment="Top" Width="82" Checked="RadioButton_Checked" IsChecked="True"/>
+        <RadioButton Name="Res" Content="Restart" HorizontalAlignment="Left" Margin="128,159,0,0" VerticalAlignment="Top" Checked="RadioButton_Checked"/>
+        <RadioButton Name="Hib" Content="Hibrnate" HorizontalAlignment="Left" Margin="218,159,0,0" VerticalAlignment="Top" Checked="RadioButton_Checked"/>
+        <Button Name="start" Content="Start!" HorizontalAlignment="Left" Margin="297,154,0,0" VerticalAlignment="Top" Width="75"/>
+        <TextBox DataObject.Pasting="Pasting" PreviewTextInput="PreviewTextInput" Name="H" HorizontalAlignment="Left" Height="23" Margin="68,100,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="64"/>
+        <TextBox DataObject.Pasting="Pasting" PreviewTextInput="PreviewTextInput" Name="M" HorizontalAlignment="Left" Height="23" Margin="160,100,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="60"/>
+        <TextBox DataObject.Pasting="Pasting" PreviewTextInput="PreviewTextInput" Name="S" HorizontalAlignment="Left" Height="23" Margin="246,100,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="56" RenderTransformOrigin="0.254,0.299"/>
     </Grid>
 </Window>

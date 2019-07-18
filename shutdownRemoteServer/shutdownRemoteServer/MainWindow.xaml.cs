@@ -63,9 +63,14 @@ namespace shutdownRemoteServer
             {
                 TBCountDown.Foreground = Brushes.Black;
             }
-
-
-            TBCountDown.Text = string.Format("{0}:{1}:{2}", time/3600, (time / 60) % 60, time % 60);
+            int sec = time % 60;
+            int min = (time / 60) % 60;
+            int hr = time / 3600;
+            string timeFor = string.Format("{0}:{1}:{2}", 
+                hr < 10 ? "0" + hr.ToString() : hr.ToString(),
+                min < 10 ? "0" + min.ToString() : min.ToString(), 
+                sec < 10 ? "0" + sec.ToString() : sec.ToString());
+            TBCountDown.Text = timeFor;
             time--;
         }
 
@@ -131,9 +136,9 @@ namespace shutdownRemoteServer
             H.IsEnabled = true;
             M.IsEnabled = true;
             S.IsEnabled = true;
-            H.Text = "Hours";
-            M.Text = "Minutes";
-            S.Text = "Seconds";
+            H.Text = "0";
+            M.Text = "0";
+            S.Text = "0";
             start.Content = "Start!";
             start.Click += Start_Click;
             start.Click -= Stop_Click;
