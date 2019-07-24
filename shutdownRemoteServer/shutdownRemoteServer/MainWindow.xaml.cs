@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -17,9 +20,9 @@ using System.Windows.Threading;
 
 namespace shutdownRemoteServer
 {
-
     public partial class MainWindow : Window
     {
+
         private enum Mode
 
         {
@@ -34,6 +37,9 @@ namespace shutdownRemoteServer
 
         private System.Diagnostics.Process process;
         private System.Diagnostics.ProcessStartInfo startInfo;
+        private BackgroundWorker background = new BackgroundWorker();
+        private bool started = false;
+
 
         public MainWindow()
         {
@@ -44,6 +50,62 @@ namespace shutdownRemoteServer
             process = new System.Diagnostics.Process();
             startInfo = new System.Diagnostics.ProcessStartInfo();
             start.Click += Start_Click;
+            SocketListener.StartListening();
+            Thread thread = new Thread(new ThreadStart(SocketListener.Accept));
+            thread.IsBackground = true;
+            thread.Start();
+            Thread t1 = new Thread(new ThreadStart(HandleMessages));
+            t1.IsBackground = true;
+            t1.Start();
+            background.WorkerReportsProgress = true;
+            background.DoWork += Background_DoWork;
+            background.ProgressChanged += Start_Click;
+            background.RunWorkerAsync();
+        }
+
+        private void HandleMessages()
+        {
+            
+            
+            byte[] msg = new byte[1];
+            while (true)
+            {
+                byte[] data = SocketListener.recv();
+                switch(data[0])
+                {
+                    case 100:
+                        if (started)
+                        {
+                            msg[0] = 50;
+                            break;
+                        }
+                        byte[] timeByte = new byte[4];
+                        mode = (Mode)data[1];
+                        Array.Copy(data, 2, timeByte, 0, 4);
+                        Array.Reverse(timeByte);
+                        time = BitConverter.ToInt32(timeByte, 0);
+                        msg[0] = 200;
+                        background.ReportProgress(0);
+                        break;
+                    case 150:
+                        if (!started)
+                        {
+                            msg[0] = 50;
+                            break;
+                        }
+                        background.ReportProgress(1);
+                        break;
+                }
+
+                SocketListener.Sent(msg);
+            }
+
+           
+        }
+
+        private void Background_DoWork(object sender, DoWorkEventArgs e)
+        {
+            while (true) ;
         }
 
         private void Timer_Tick(object sender, EventArgs e)
@@ -128,6 +190,24 @@ namespace shutdownRemoteServer
             start.Content = "Stop!";
             start.Click -= Start_Click;
             start.Click += Stop_Click;
+            started = true;
+        }
+
+        private void Start_Click(object sender, ProgressChangedEventArgs e)
+        {
+            if (e.ProgressPercentage == 1)
+            {
+                Stop_Click();
+                return;
+            }
+            H.IsEnabled = false;
+            M.IsEnabled = false;
+            S.IsEnabled = false;
+            timer.Start();
+            start.Content = "Stop!";
+            start.Click -= Start_Click;
+            start.Click += Stop_Click;
+            started = true;
         }
 
         private void Stop_Click(object sender, RoutedEventArgs e)
@@ -142,6 +222,22 @@ namespace shutdownRemoteServer
             start.Content = "Start!";
             start.Click += Start_Click;
             start.Click -= Stop_Click;
+            started = false;
+        }
+
+        private void Stop_Click()
+        {
+            timer.Stop();
+            H.IsEnabled = true;
+            M.IsEnabled = true;
+            S.IsEnabled = true;
+            H.Text = "0";
+            M.Text = "0";
+            S.Text = "0";
+            start.Content = "Start!";
+            start.Click += Start_Click;
+            start.Click -= Stop_Click;
+            started = false;
         }
 
         private void PreviewTextInput(object sender, TextCompositionEventArgs e)
