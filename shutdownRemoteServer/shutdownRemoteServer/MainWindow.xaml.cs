@@ -34,6 +34,7 @@ namespace shutdownRemoteServer
         private int time = 5;
         private DispatcherTimer timer;
         private Mode mode;
+        private System.Windows.Forms.NotifyIcon trayIcon;
 
         private System.Diagnostics.Process process;
         private System.Diagnostics.ProcessStartInfo startInfo;
@@ -44,6 +45,13 @@ namespace shutdownRemoteServer
         public MainWindow()
         {
             InitializeComponent();
+
+            trayIcon = new System.Windows.Forms.NotifyIcon();
+            trayIcon.Icon = new System.Drawing.Icon("../../shutdown.ico");
+            trayIcon.MouseDoubleClick += TrayIcon_MouseDoubleClick;
+            trayIcon.MouseDown += trayIcon_MouseDown;
+            trayIcon.Visible = true;
+
             timer = new DispatcherTimer();
             timer.Interval = new TimeSpan(0, 0, 1);
             timer.Tick += Timer_Tick;
@@ -61,6 +69,37 @@ namespace shutdownRemoteServer
             background.DoWork += Background_DoWork;
             background.ProgressChanged += Start_Click;
             background.RunWorkerAsync();
+        }
+
+        private void trayIcon_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e)
+        {
+            if (e.Button == System.Windows.Forms.MouseButtons.Right)
+            {
+                ContextMenu menu = (ContextMenu)this.FindResource("TrayMenu");
+                menu.IsOpen = true;
+            }
+        }
+
+        private void TrayIcon_MouseDoubleClick(object sender, System.Windows.Forms.MouseEventArgs e)
+        {
+            this.WindowState = WindowState.Normal;
+        }
+
+        private void Winodw_StateChanged(object sender, EventArgs e)
+        {
+            if (this.WindowState == WindowState.Minimized)
+            {
+                this.ShowInTaskbar = false;
+                trayIcon.BalloonTipTitle = "Minimize Successful";
+                trayIcon.BalloonTipText = "Minimize the app";
+                trayIcon.ShowBalloonTip(400);
+                trayIcon.Visible = true;
+            }
+            else if (this.WindowState == WindowState.Normal)
+            {
+                trayIcon.Visible = false;
+                this.ShowInTaskbar = true;
+            }
         }
 
         private void HandleMessages()
@@ -240,7 +279,7 @@ namespace shutdownRemoteServer
             started = false;
         }
 
-        private void PreviewTextInput(object sender, TextCompositionEventArgs e)
+        private new void PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
             e.Handled = !IsTextAllowed(e.Text);
         }
@@ -265,6 +304,18 @@ namespace shutdownRemoteServer
             {
                 e.CancelCommand();
             }
+        }
+
+        private void Show_IP(object sender, RoutedEventArgs e)
+        {
+            string ip = SocketListener.getServerIp();
+            ip = ip.Substring(0,ip.IndexOf(':'));
+            MessageBox.Show(ip, "IP", MessageBoxButton.OK);
+        }
+
+        private void Exit(object sender, RoutedEventArgs e)
+        {
+            System.Windows.Application.Current.Shutdown();
         }
     }
 }

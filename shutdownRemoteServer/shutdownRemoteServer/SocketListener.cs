@@ -13,17 +13,7 @@ namespace shutdownRemoteServer
     public static class SocketListener
     {
         private static Socket handler;
-
-        private static byte[] data;
-
         private static Socket listener;
-
-        public static bool IsDataAvail { get; set; }
-
-        public static byte[] Data
-        {
-            get { return data; }
-        }
 
         public static void StartListening()
         {
@@ -70,6 +60,11 @@ namespace shutdownRemoteServer
             handler.Send(msg);
             handler.Shutdown(SocketShutdown.Both);
             handler.Close();
+        }
+
+        public static string getServerIp()
+        {
+            return listener.LocalEndPoint.ToString();
         }
     }
 }
