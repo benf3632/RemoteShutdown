@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'socket.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
-Duration _time;
+
+Duration _time = new Duration(seconds: 0);
 
 class RemoteShutdown extends StatefulWidget {
   @override
@@ -13,6 +16,7 @@ class RemoteShutdown extends StatefulWidget {
 class _RemoteShutdownState extends State<RemoteShutdown> {
   bool _started = false;
   int _radioMode = 0;
+  String _ip;
 
   @override
   Widget build(BuildContext context) {
@@ -20,6 +24,12 @@ class _RemoteShutdownState extends State<RemoteShutdown> {
       appBar: AppBar(
         title: const Text('Remote Shutdown'),
         centerTitle: true,
+        actions: <Widget>[
+          new IconButton(
+            icon: new Icon(Icons.help),
+            onPressed: _showHelp,
+          )
+        ],
       ),
       body: new Center(
         child: new Column(
@@ -58,6 +68,16 @@ class _RemoteShutdownState extends State<RemoteShutdown> {
             ],
             mainAxisAlignment: MainAxisAlignment.center,
           ),
+          new SizedBox(height: 16.0),
+          new TextField(
+            decoration: new InputDecoration(
+              border: InputBorder.none,
+              hintText: 'Enter IP to shutdown (click the ? for help)'
+            ),
+            onChanged: (ct) => _ip = ct,
+            textAlign: TextAlign.center,            
+          ),
+          new SizedBox(height: 16.0),
           new RaisedButton(
             child: new Text(_started ? "Stop!" : "Start!"),
             onPressed: () {
@@ -78,14 +98,106 @@ class _RemoteShutdownState extends State<RemoteShutdown> {
     );
   }
   
-  void _start() {
+  void _start() async {
+    try {
+      Sock sock = new Sock();
+      bool _connected = false;
+      sock.connect(_ip);
+      do {
+        _connected = await sock.connected();
+      } while (!_connected);
 
+      List<int> buff = [];
+      buff.add(100);
+      buff.add(_radioMode);
+      buff.addAll(sock.intToByte(_time.inSeconds));
+      print(buff);
+      sock.send(buff);
+
+      bool recvAvail = false;
+      do {
+        recvAvail = await sock.available();
+      } while (!recvAvail);
+      List<int> recv = sock.recv();
+      if (recv[0] == 50) {
+        _showFailedToast();
+      } else {
+        _showSuccessToast();
+      }
+    }
+    catch (e){
+      _showFailedToast();
+      print(e);
+    }
   }
 
-  void _stop() {
+  void _stop() async{
+    try {
+      Sock sock = new Sock();
+      bool _connected = false;
+      sock.connect(_ip);
+      do {
+        _connected = await sock.connected();
+      } while (!_connected);
 
+      List<int> buff = [];
+      buff.add(150);
+      print(buff);
+      sock.send(buff);
+
+      bool recvAvail = false;
+      do {
+        recvAvail = await sock.available();
+      } while (!recvAvail);
+      List<int> recv = sock.recv();
+      if (recv[0] == 50) {
+        _showFailedToast();
+      } else {
+        _showStoppedToast();
+      }
+    }
+    catch (e){
+      _showFailedToast();
+      print(e);
+    }
   }
 
+  void _showSuccessToast() {
+    Fluttertoast.showToast(
+      msg: "Timer started successfuly",
+      textColor: Colors.white,
+      toastLength: Toast.LENGTH_SHORT,
+      timeInSecForIos: 1,
+      gravity: ToastGravity.BOTTOM,
+      backgroundColor: Colors.grey,
+    );
+  }
+
+  void _showStoppedToast() {
+    Fluttertoast.showToast(
+      msg: "Timer stopped successfuly",
+      textColor: Colors.white,
+      toastLength: Toast.LENGTH_SHORT,
+      timeInSecForIos: 1,
+      gravity: ToastGravity.BOTTOM,
+      backgroundColor: Colors.grey,
+    );
+  }
+
+  void _showFailedToast() {
+    Fluttertoast.showToast(
+      msg: "Something went wrong",
+      textColor: Colors.white,
+      toastLength: Toast.LENGTH_SHORT,
+      timeInSecForIos: 1,
+      gravity: ToastGravity.BOTTOM,
+      backgroundColor: Colors.grey,
+    );
+  }
+
+  void _showHelp() {
+    Navigator.push(context, MaterialPageRoute(builder: (context) => Help()));
+  }
 
   void _changedMode(int type) {
     setState(() {
@@ -97,6 +209,24 @@ class _RemoteShutdownState extends State<RemoteShutdown> {
     Navigator.push(context, MaterialPageRoute(builder: (context) => TimerPicker()));
   }
 
+}
+
+class Help extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return new Scaffold(
+      appBar: new AppBar(
+        title: new Text("Help"),
+        centerTitle: true,
+      ),
+      body: new Row(
+        children: <Widget>[
+          new SizedBox(width: 20.0),
+          new Text("To start the shutdown timer:\n1.pick a time with the button 'Pick Time'\n2.pick a mode (shutdown, restart, hibernate)\n3.Enter the IP of the computer to shutdown\n (can be seen in the option on the computer 'Show IP'\n4.Click Start\n\nNote: Need to be connected to the same network"),
+        ], 
+      ),
+    );
+  }
 }
 
 
