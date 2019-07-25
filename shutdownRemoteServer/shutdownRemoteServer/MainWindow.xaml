@@ -7,6 +7,16 @@
         mc:Ignorable="d"
         Title="Shutdown Remote Server" Height="220.461" Width="397.09" ResizeMode="CanMinimize" WindowStartupLocation="CenterScreen" Icon="shutdown.ico" StateChanged="Winodw_StateChanged">
     <Grid Margin="0,0,4,0">
+        <DockPanel>
+            <Menu DockPanel.Dock="Top">
+                <MenuItem Header="_File">
+                    <MenuItem Header="Show IP" Click="Show_IP"/>
+                    <Separator/>
+                    <MenuItem Header="Exit" Click="Exit"/>
+                </MenuItem>
+                <MenuItem Header="Help" Click="Help"/>
+            </Menu>
+        </DockPanel>
         <TextBlock Name="TBCountDown" TextAlignment="Center" FontSize="70" Text="00:00:00" FontFamily="Segoe UI Light" Margin="50,5,58,91" RenderTransformOrigin="0.5,0.5">
             <TextBlock.RenderTransform>
                 <TransformGroup>
@@ -28,7 +38,8 @@
     <Window.Resources>
         <ContextMenu x:Key="TrayMenu" Placement="MousePoint">
             <MenuItem Header="Show IP" Click="Show_IP"/>
-            <MenuItem Header="--------" IsCheckable="False" IsEnabled="False"/>
+            <MenuItem Header="Help" Click="Help"/>
+            <Separator/>
             <MenuItem Header="Exit" Click="Exit"/>
         </ContextMenu>
     </Window.Resources>

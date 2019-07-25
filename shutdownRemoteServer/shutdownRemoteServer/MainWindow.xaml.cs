@@ -317,5 +317,15 @@ namespace shutdownRemoteServer
         {
             System.Windows.Application.Current.Shutdown();
         }
+
+        private void Help(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("For Starting local Shutdown:\n" +
+                            "Pick the length of the timer (H:M:S) and a shutdown option\n\n" +
+                            "For Starting Remote Shutdown:\n" +
+                            "In the app chose the time as above and a shutdown option\n" +
+                            "Enter the ip of the computer you want to shutdown\n (Can be seen in File -> Show IP or icon tray -> Show IP)", 
+                            "Help", MessageBoxButton.OK);
+        }
     }
 }

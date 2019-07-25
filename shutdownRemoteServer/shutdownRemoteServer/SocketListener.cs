@@ -49,8 +49,9 @@ namespace shutdownRemoteServer
 
         public static byte[] recv()
         {
+            int i = 100;
             byte[] bytes = new byte[1024];
-            while (handler == null || !handler.Connected) ;
+            while ((handler == null || !handler.Connected));
             int byteRec = handler.Receive(bytes);
             return bytes;
         }
