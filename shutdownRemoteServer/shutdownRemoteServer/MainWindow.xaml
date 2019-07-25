@@ -5,8 +5,18 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:shutdownRemoteServer"
         mc:Ignorable="d"
-        Title="Shutdown Remote Server" Height="220.461" Width="397.09" ResizeMode="NoResize" WindowStartupLocation="CenterScreen" Icon="shutdown.ico">
+        Title="Shutdown Remote Server" Height="220.461" Width="397.09" ResizeMode="CanMinimize" WindowStartupLocation="CenterScreen" Icon="shutdown.ico" StateChanged="Winodw_StateChanged">
     <Grid Margin="0,0,4,0">
+        <DockPanel>
+            <Menu DockPanel.Dock="Top">
+                <MenuItem Header="_File">
+                    <MenuItem Header="Show IP" Click="Show_IP"/>
+                    <Separator/>
+                    <MenuItem Header="Exit" Click="Exit"/>
+                </MenuItem>
+                <MenuItem Header="Help" Click="Help"/>
+            </Menu>
+        </DockPanel>
         <TextBlock Name="TBCountDown" TextAlignment="Center" FontSize="70" Text="00:00:00" FontFamily="Segoe UI Light" Margin="50,5,58,91" RenderTransformOrigin="0.5,0.5">
             <TextBlock.RenderTransform>
                 <TransformGroup>
@@ -25,4 +35,12 @@
         <TextBox DataObject.Pasting="Pasting" PreviewTextInput="PreviewTextInput" Name="M" HorizontalAlignment="Left" Height="23" Margin="160,100,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="60"/>
         <TextBox DataObject.Pasting="Pasting" PreviewTextInput="PreviewTextInput" Name="S" HorizontalAlignment="Left" Height="23" Margin="246,100,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="56" RenderTransformOrigin="0.254,0.299"/>
     </Grid>
+    <Window.Resources>
+        <ContextMenu x:Key="TrayMenu" Placement="MousePoint">
+            <MenuItem Header="Show IP" Click="Show_IP"/>
+            <MenuItem Header="Help" Click="Help"/>
+            <Separator/>
+            <MenuItem Header="Exit" Click="Exit"/>
+        </ContextMenu>
+    </Window.Resources>
 </Window>

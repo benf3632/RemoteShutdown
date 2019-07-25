@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -17,9 +20,9 @@ using System.Windows.Threading;
 
 namespace shutdownRemoteServer
 {
-
     public partial class MainWindow : Window
     {
+
         private enum Mode
 
         {
@@ -31,19 +34,117 @@ namespace shutdownRemoteServer
         private int time = 5;
         private DispatcherTimer timer;
         private Mode mode;
+        private System.Windows.Forms.NotifyIcon trayIcon;
 
         private System.Diagnostics.Process process;
         private System.Diagnostics.ProcessStartInfo startInfo;
+        private BackgroundWorker background = new BackgroundWorker();
+        private bool started = false;
+
 
         public MainWindow()
         {
             InitializeComponent();
+
+            trayIcon = new System.Windows.Forms.NotifyIcon();
+            trayIcon.Icon = new System.Drawing.Icon("../../shutdown.ico");
+            trayIcon.MouseDoubleClick += TrayIcon_MouseDoubleClick;
+            trayIcon.MouseDown += trayIcon_MouseDown;
+            trayIcon.Visible = true;
+
             timer = new DispatcherTimer();
             timer.Interval = new TimeSpan(0, 0, 1);
             timer.Tick += Timer_Tick;
             process = new System.Diagnostics.Process();
             startInfo = new System.Diagnostics.ProcessStartInfo();
             start.Click += Start_Click;
+            SocketListener.StartListening();
+            Thread thread = new Thread(new ThreadStart(SocketListener.Accept));
+            thread.IsBackground = true;
+            thread.Start();
+            Thread t1 = new Thread(new ThreadStart(HandleMessages));
+            t1.IsBackground = true;
+            t1.Start();
+            background.WorkerReportsProgress = true;
+            background.DoWork += Background_DoWork;
+            background.ProgressChanged += Start_Click;
+            background.RunWorkerAsync();
+        }
+
+        private void trayIcon_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e)
+        {
+            if (e.Button == System.Windows.Forms.MouseButtons.Right)
+            {
+                ContextMenu menu = (ContextMenu)this.FindResource("TrayMenu");
+                menu.IsOpen = true;
+            }
+        }
+
+        private void TrayIcon_MouseDoubleClick(object sender, System.Windows.Forms.MouseEventArgs e)
+        {
+            this.WindowState = WindowState.Normal;
+        }
+
+        private void Winodw_StateChanged(object sender, EventArgs e)
+        {
+            if (this.WindowState == WindowState.Minimized)
+            {
+                this.ShowInTaskbar = false;
+                trayIcon.BalloonTipTitle = "Minimize Successful";
+                trayIcon.BalloonTipText = "Minimize the app";
+                trayIcon.ShowBalloonTip(400);
+                trayIcon.Visible = true;
+            }
+            else if (this.WindowState == WindowState.Normal)
+            {
+                trayIcon.Visible = false;
+                this.ShowInTaskbar = true;
+            }
+        }
+
+        private void HandleMessages()
+        {
+            
+            
+            byte[] msg = new byte[1];
+            while (true)
+            {
+                byte[] data = SocketListener.recv();
+                switch(data[0])
+                {
+                    case 100:
+                        if (started)
+                        {
+                            msg[0] = 50;
+                            break;
+                        }
+                        byte[] timeByte = new byte[4];
+                        mode = (Mode)data[1];
+                        Array.Copy(data, 2, timeByte, 0, 4);
+                        Array.Reverse(timeByte);
+                        time = BitConverter.ToInt32(timeByte, 0);
+                        msg[0] = 200;
+                        background.ReportProgress(0);
+                        break;
+                    case 150:
+                        if (!started)
+                        {
+                            msg[0] = 50;
+                            break;
+                        }
+                        background.ReportProgress(1);
+                        break;
+                }
+
+                SocketListener.Sent(msg);
+            }
+
+           
+        }
+
+        private void Background_DoWork(object sender, DoWorkEventArgs e)
+        {
+            while (true) ;
         }
 
         private void Timer_Tick(object sender, EventArgs e)
@@ -128,6 +229,24 @@ namespace shutdownRemoteServer
             start.Content = "Stop!";
             start.Click -= Start_Click;
             start.Click += Stop_Click;
+            started = true;
+        }
+
+        private void Start_Click(object sender, ProgressChangedEventArgs e)
+        {
+            if (e.ProgressPercentage == 1)
+            {
+                Stop_Click();
+                return;
+            }
+            H.IsEnabled = false;
+            M.IsEnabled = false;
+            S.IsEnabled = false;
+            timer.Start();
+            start.Content = "Stop!";
+            start.Click -= Start_Click;
+            start.Click += Stop_Click;
+            started = true;
         }
 
         private void Stop_Click(object sender, RoutedEventArgs e)
@@ -142,9 +261,25 @@ namespace shutdownRemoteServer
             start.Content = "Start!";
             start.Click += Start_Click;
             start.Click -= Stop_Click;
+            started = false;
         }
 
-        private void PreviewTextInput(object sender, TextCompositionEventArgs e)
+        private void Stop_Click()
+        {
+            timer.Stop();
+            H.IsEnabled = true;
+            M.IsEnabled = true;
+            S.IsEnabled = true;
+            H.Text = "0";
+            M.Text = "0";
+            S.Text = "0";
+            start.Content = "Start!";
+            start.Click += Start_Click;
+            start.Click -= Stop_Click;
+            started = false;
+        }
+
+        private new void PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
             e.Handled = !IsTextAllowed(e.Text);
         }
@@ -169,6 +304,28 @@ namespace shutdownRemoteServer
             {
                 e.CancelCommand();
             }
+        }
+
+        private void Show_IP(object sender, RoutedEventArgs e)
+        {
+            string ip = SocketListener.getServerIp();
+            ip = ip.Substring(0,ip.IndexOf(':'));
+            MessageBox.Show(ip, "IP", MessageBoxButton.OK);
+        }
+
+        private void Exit(object sender, RoutedEventArgs e)
+        {
+            System.Windows.Application.Current.Shutdown();
+        }
+
+        private void Help(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("For Starting local Shutdown:\n" +
+                            "Pick the length of the timer (H:M:S) and a shutdown option\n\n" +
+                            "For Starting Remote Shutdown:\n" +
+                            "In the app chose the time as above and a shutdown option\n" +
+                            "Enter the ip of the computer you want to shutdown\n (Can be seen in File -> Show IP or icon tray -> Show IP)", 
+                            "Help", MessageBoxButton.OK);
         }
     }
 }
