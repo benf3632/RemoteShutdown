@@ -47,7 +47,7 @@ namespace shutdownRemoteServer
             InitializeComponent();
 
             trayIcon = new System.Windows.Forms.NotifyIcon();
-            trayIcon.Icon = new System.Drawing.Icon("../../shutdown.ico");
+            trayIcon.Icon = Resource.shutdown;
             trayIcon.MouseDoubleClick += TrayIcon_MouseDoubleClick;
             trayIcon.MouseDown += trayIcon_MouseDown;
             trayIcon.Visible = true;
