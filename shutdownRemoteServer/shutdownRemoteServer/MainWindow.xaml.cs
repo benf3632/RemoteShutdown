@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -55,20 +56,33 @@ namespace shutdownRemoteServer
             timer = new DispatcherTimer();
             timer.Interval = new TimeSpan(0, 0, 1);
             timer.Tick += Timer_Tick;
+
             process = new System.Diagnostics.Process();
             startInfo = new System.Diagnostics.ProcessStartInfo();
+
             start.Click += Start_Click;
+
             SocketListener.StartListening();
+
             Thread thread = new Thread(new ThreadStart(SocketListener.Accept));
             thread.IsBackground = true;
             thread.Start();
-            Thread t1 = new Thread(new ThreadStart(HandleMessages));
-            t1.IsBackground = true;
-            t1.Start();
+       
             background.WorkerReportsProgress = true;
-            background.DoWork += Background_DoWork;
+            background.DoWork += HandleMessages;
             background.ProgressChanged += Start_Click;
             background.RunWorkerAsync();
+
+            using (RegistryKey key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true))
+            {
+                string value = key.GetValue("RemoteShutdownServer") as string;
+                bool check = value != null ? true : false;
+          
+                DockStartup.IsChecked = check;
+                ContextMenu menu = this.Resources["TrayMenu"] as ContextMenu;
+                MenuItem item = LogicalTreeHelper.FindLogicalNode(menu, "TrayStartup") as MenuItem;
+                item.IsChecked = check;
+            }
         }
 
         private void trayIcon_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e)
@@ -102,10 +116,8 @@ namespace shutdownRemoteServer
             }
         }
 
-        private void HandleMessages()
+        private void HandleMessages(object sender, DoWorkEventArgs e)
         {
-            
-            
             byte[] msg = new byte[1];
             while (true)
             {
@@ -138,13 +150,6 @@ namespace shutdownRemoteServer
 
                 SocketListener.Sent(msg);
             }
-
-           
-        }
-
-        private void Background_DoWork(object sender, DoWorkEventArgs e)
-        {
-            while (true) ;
         }
 
         private void Timer_Tick(object sender, EventArgs e)
@@ -326,6 +331,30 @@ namespace shutdownRemoteServer
                             "In the app chose the time as above and a shutdown option\n" +
                             "Enter the ip of the computer you want to shutdown\n (Can be seen in File -> Show IP or icon tray -> Show IP)", 
                             "Help", MessageBoxButton.OK);
+        }
+
+        private void Startup(object sender, RoutedEventArgs e)
+        {
+            using (RegistryKey key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true))
+            {
+                key.SetValue("RemoteShutdownServer", "\"" + System.Reflection.Assembly.GetExecutingAssembly().Location + "\"");
+            }
+            DockStartup.IsChecked = true;
+            ContextMenu menu = this.Resources["TrayMenu"] as ContextMenu;
+            MenuItem item = LogicalTreeHelper.FindLogicalNode(menu, "TrayStartup") as MenuItem;
+            item.IsChecked = true;
+        }
+
+        private void UStartup(object sender, RoutedEventArgs e)
+        {
+            using (RegistryKey key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true))
+            {
+                key.DeleteValue("RemoteShutdownServer", false);
+            }
+            DockStartup.IsChecked = false;
+            ContextMenu menu = this.Resources["TrayMenu"] as ContextMenu;
+            MenuItem item = LogicalTreeHelper.FindLogicalNode(menu, "TrayStartup") as MenuItem;
+            item.IsChecked = true;
         }
     }
 }

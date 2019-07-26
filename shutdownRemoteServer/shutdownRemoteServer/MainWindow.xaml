@@ -11,6 +11,7 @@
             <Menu DockPanel.Dock="Top">
                 <MenuItem Header="_File">
                     <MenuItem Header="Show IP" Click="Show_IP"/>
+                    <MenuItem Name="DockStartup" Header="Start on Startup" IsCheckable="True" Checked="Startup" Unchecked="UStartup"/>
                     <Separator/>
                     <MenuItem Header="Exit" Click="Exit"/>
                 </MenuItem>
@@ -38,6 +39,7 @@
     <Window.Resources>
         <ContextMenu x:Key="TrayMenu" Placement="MousePoint">
             <MenuItem Header="Show IP" Click="Show_IP"/>
+            <MenuItem x:Name="TrayStartup" Header="Start on Startup" IsCheckable="True" Checked="Startup" Unchecked="UStartup"/>
             <MenuItem Header="Help" Click="Help"/>
             <Separator/>
             <MenuItem Header="Exit" Click="Exit"/>
