@@ -237,7 +237,7 @@ class _RemoteShutdownState extends State<RemoteShutdown> {
 
     _scaffoldKey.currentState..showSnackBar(
       new SnackBar(
-        content: new Text('Selected ip: $_ip'),
+        content: new Text('Selected ip: ${_ip == null ? "" : _ip}'),
         action: new SnackBarAction(
           label: 'Undo',
           onPressed: () {
