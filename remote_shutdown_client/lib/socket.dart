@@ -7,7 +7,7 @@ class Sock {
   bool _connected = false;
 
   void connect(String ip) {
-    Socket.connect(ip, 8111).then((socket) {
+    Socket.connect(ip, 8111, timeout: new Duration(milliseconds: 100)).then((socket) {
       _socket = socket;
       _connected = true;
       print('Connected to: ${_socket.remoteAddress.address}:${_socket.remotePort}');

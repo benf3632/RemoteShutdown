@@ -1,11 +1,10 @@
-import 'dart:ui' as prefix0;
-
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'socket.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'help.dart';
+import 'hosts.dart';
 
 
 Duration _time = new Duration(seconds: 0);
@@ -18,13 +17,18 @@ class RemoteShutdown extends StatefulWidget {
 }
 
 class _RemoteShutdownState extends State<RemoteShutdown> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
+
+
   bool _started = false;
   int _radioMode = 0;
   String _ip;
+  TextEditingController _ipCont = new TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
         title: const Text('Remote Shutdown'),
         centerTitle: true,
@@ -32,6 +36,10 @@ class _RemoteShutdownState extends State<RemoteShutdown> {
           new IconButton(
             icon: new Icon(Icons.help),
             onPressed: _showHelp,
+          ),
+          new IconButton(
+            icon: new Icon(Icons.language),
+            onPressed: () => _pushHosts(context),
           )
         ],
       ),
@@ -46,7 +54,14 @@ class _RemoteShutdownState extends State<RemoteShutdown> {
           new SizedBox(height: 16.0),
           new Text("Time Selected:",
                     style: new TextStyle(fontWeight: FontWeight.bold, fontSize: 20.0),),
-          new Text(_time.toString().substring(0, _time.toString().indexOf('.')),style: new TextStyle(fontWeight: FontWeight.bold, fontSize: 20.0),),
+          new RichText(
+            text: new TextSpan(
+              text: _time.toString().substring(0, _time.toString().indexOf('.')),
+              style: new TextStyle(fontWeight: FontWeight.bold, fontSize: 20.0, color: Colors.black),
+              recognizer: new TapGestureRecognizer()..onTap = () {_showTimer();}
+            ),
+            
+          ),
           new SizedBox(height: 16.0),
           new Text('Mode:', style: new TextStyle(fontSize: 20.0),),
           new Row(
@@ -79,7 +94,9 @@ class _RemoteShutdownState extends State<RemoteShutdown> {
               hintText: 'Enter IP to shutdown (click the ? for help)'
             ),
             onChanged: (ct) => _ip = ct,
-            textAlign: TextAlign.center,            
+            textAlign: TextAlign.center,
+            controller: _ipCont, 
+
           ),
           new SizedBox(height: 16.0),
           new RaisedButton(
@@ -213,44 +230,24 @@ class _RemoteShutdownState extends State<RemoteShutdown> {
     Navigator.push(context, MaterialPageRoute(builder: (context) => TimerPicker()));
   }
 
-}
+  void _pushHosts(BuildContext context) async{
+    String ip = await Navigator.push(context, MaterialPageRoute(builder: (context) => Hosts()));
+    _ip = ip;
+    _ipCont.text = _ip;
 
-class Help extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return new Scaffold(
-      appBar: new AppBar(
-        title: new Text("Help"),
-        centerTitle: true,
-      ),
-      body: new Column(
-        children: <Widget>[
-          new Row(
-            children: <Widget>[
-              new SizedBox(width: 20.0),
-              new Text("To start the shutdown timer:\n1.pick a time with the button 'Pick Time'\n2.pick a mode (shutdown, restart, hibernate)\n3.Enter the IP of the computer to shutdown\n (can be seen in the option on the computer 'Show IP'\n4.Click Start\n\nNote: Need to be connected to the same network"),
-            ], 
-          ),
-          new SizedBox(height: 16.0),
-          new RichText(
-            text: new TextSpan(
-              children: [
-                new TextSpan(
-                  text: 'The Dekstop Application can be found at:\n',
-                  style: new TextStyle(color: Colors.black)
-                ),
-                new TextSpan(
-                  text: '     Github: RemoteShutdown-Releases',
-                  style: new TextStyle(color: Colors.blue),
-                  recognizer: new TapGestureRecognizer()
-                    ..onTap = () { launch('https://github.com/benf3632/RemoteShutdown-Releases/releases');}
-                )
-              ]
-            ),
-          )
-        ],
-      )
-    );
+    _scaffoldKey.currentState..showSnackBar(
+      new SnackBar(
+        content: new Text('Selected ip: $_ip'),
+        action: new SnackBarAction(
+          label: 'Undo',
+          onPressed: () {
+            setState(() {
+              _ip = "";
+              _ipCont.text = _ip;
+            });
+          },
+        ),
+    ));
   }
 }
 
