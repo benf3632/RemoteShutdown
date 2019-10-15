@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get_ip/get_ip.dart';
 import 'socket.dart';
+import 'dart:io';
 
 class Hosts extends StatefulWidget {
   Hosts({Key key}) : super(key: key);
@@ -41,24 +42,25 @@ class _HostsState extends State<Hosts> {
               String key = keys[i];
               String hostName = hosts[key];
               return new Card(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100.0)),
                 child: new InkWell(
-                  onTap: () {
-                    _ip = key;
-                    _selectHost(context);
-                  },
-                  child: new Container(
-                    width: 300,
-                    height: 100,
-                    child: new Column(
-                      children: <Widget>[
-                        new SizedBox(height: 15.0,),
-                        new Text(hostName, style: new TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),),
-                        new SizedBox(height: 15.0,),
-                        new Text(key, style: new TextStyle(fontSize: 15.0),)
-                      ],
-                    ),
-                  ),
-                ), 
+                    onTap: () {
+                        _ip = key;
+                         _selectHost(context);
+                    },
+                        child: new Container(
+                            width: 300,
+                            height: 100,
+                            child: new Column(
+                                children: <Widget>[
+                                    new SizedBox(height: 15.0,),
+                                    new Text(hostName, style: new TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),),
+                                    new SizedBox(height: 15.0,),
+                                    new Text(key, style: new TextStyle(fontSize: 15.0),)
+                                ],
+                            ),
+                     ),
+                 ),
               );
             }
           );
@@ -68,26 +70,28 @@ class _HostsState extends State<Hosts> {
     );
   }
 
-  Future<Map> _getHosts() async{
+
+  Future<Map> _getHosts() async {
     Map hosts = {};
     String ip = await GetIp.ipAddress;
-    print(ip);
-    List<String> ipSplit = ip.split('.');
-    final String ipTemplate = ipSplit[0] + "." + ipSplit[1] + "." + ipSplit[2] + ".";
+    final String subnet = ip.substring(0, ip.lastIndexOf('.'));
+    final int port = 8111;
     List<int> msg = [25];
 
-    for (int i = 0; i < 256; i++) {
-      String address = ipTemplate + i.toString();
-      print(address);
-      Sock sock = new Sock();
+    for (int i = 1; i < 256; ++i) {
+      final host = '$subnet.$i';
+
       try {
-        sock.connect(address);
+        final Socket s = await Socket.connect(host, port, timeout: new Duration(milliseconds: 5));
+        s.destroy();
+        s.close();
+        Sock sock = new Sock();
+        sock.connect(host);
         bool connected = false;
-        int j = 1;
+        print(host);
         do {
           connected = await sock.connected();
-          j--;
-        } while (connected == false && j > 0);
+        } while (connected == false);
         if (connected != false) {
           bool avail = false;
           sock.send(msg);
@@ -99,11 +103,11 @@ class _HostsState extends State<Hosts> {
           String recvStr = String.fromCharCodes(recv);
           List<String> host = recvStr.split(',');
           hosts[host[0]] = host[1];
-        }
+        } 
+      } catch (e) {
       }
-      catch(e) {}
     }
-    
+    print('done');
     return hosts;
   }
 
