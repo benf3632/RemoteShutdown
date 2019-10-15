@@ -1,22 +1,13 @@
 ﻿using Microsoft.Win32;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.Windows.Threading;
 
 namespace shutdownRemoteServer
@@ -83,6 +74,10 @@ namespace shutdownRemoteServer
                 MenuItem item = LogicalTreeHelper.FindLogicalNode(menu, "TrayStartup") as MenuItem;
                 item.IsChecked = check;
             }
+
+            Thread dis = new Thread(new ThreadStart(SocketListener.makeDiscovrable));
+            dis.IsBackground = true;
+            dis.Start();
         }
 
         private void trayIcon_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e)
@@ -128,6 +123,7 @@ namespace shutdownRemoteServer
                         if (started)
                         {
                             msg[0] = 50;
+                            SocketListener.Sent(msg);
                             break;
                         }
                         byte[] timeByte = new byte[4];
@@ -137,18 +133,25 @@ namespace shutdownRemoteServer
                         time = BitConverter.ToInt32(timeByte, 0);
                         msg[0] = 200;
                         background.ReportProgress(0);
+                        SocketListener.Sent(msg);
                         break;
                     case 150:
                         if (!started)
                         {
                             msg[0] = 50;
+                            SocketListener.Sent(msg);
                             break;
                         }
                         background.ReportProgress(1);
+                        SocketListener.Sent(msg);
+                        break;
+                    case 25:
+                        string ipDetails = SocketListener.getServerDetails();
+                        byte[] bytes = Encoding.ASCII.GetBytes(ipDetails);
+                        SocketListener.Sent(bytes);
                         break;
                 }
 
-                SocketListener.Sent(msg);
             }
         }
 

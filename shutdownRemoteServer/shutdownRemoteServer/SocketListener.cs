@@ -19,7 +19,15 @@ namespace shutdownRemoteServer
         {
 
             IPHostEntry iPHostEntry = Dns.GetHostEntry(Dns.GetHostName());
-            IPAddress iPAddress = iPHostEntry.AddressList[1];
+            IPAddress iPAddress = null;
+            foreach (var ip in iPHostEntry.AddressList)
+            {
+                if (ip.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    iPAddress = ip;
+                    break;
+                }
+            }
             IPEndPoint localEndPoint = new IPEndPoint(iPAddress, 8111);
 
             listener = new Socket(iPAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
@@ -49,7 +57,6 @@ namespace shutdownRemoteServer
 
         public static byte[] recv()
         {
-            int i = 100;
             byte[] bytes = new byte[1024];
             while ((handler == null || !handler.Connected));
             int byteRec = handler.Receive(bytes);
@@ -66,6 +73,28 @@ namespace shutdownRemoteServer
         public static string getServerIp()
         {
             return listener.LocalEndPoint.ToString();
+        }
+
+        public static void makeDiscovrable()
+        {
+            UdpClient discovrable = new UdpClient();
+            IPEndPoint ip = new IPEndPoint(IPAddress.Broadcast, 8112);
+            string msg = "," + Dns.GetHostName();
+            byte[] bytes = Encoding.ASCII.GetBytes(msg);
+            while (true)
+            {
+                discovrable.Send(bytes, bytes.Length, ip);
+                Thread.Sleep(1000);
+            }
+        }
+
+
+        public static string getServerDetails()
+        {
+            string ip = getServerIp();
+            ip = ip.Substring(0, ip.IndexOf(':'));
+            string hostname = Dns.GetHostName();
+            return ip + ',' + hostname;
         }
     }
 }
